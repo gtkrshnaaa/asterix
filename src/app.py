@@ -2,6 +2,7 @@ from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, Input
 from textual.worker import Worker
 import json
+from rich.markup import escape
 from . import config, session, core
 from .ui.chat import ChatLog
 
@@ -59,8 +60,8 @@ class AsterixApp(App):
             config.set_api_key(key)
             self.chat_log.write_system("Kunci API berhasil disimpan.")
         elif command == ":clear":
+            self.chat_log.clear() # Cukup panggil clear() dari kontainer
             session.clear_history()
-            self.chat_log.clear()
             self.chat_log.write_asterix("Sesi telah direset. Mari kita mulai dari awal.")
         else:
             self.chat_log.write_system(f"Perintah internal tidak dikenali: {command}")
@@ -73,7 +74,7 @@ class AsterixApp(App):
         self.chat_log.write_user(user_response)
         
         if user_response.lower() in ["y", "yes", "ya"]:
-            self.chat_log.write_system(f"Konfirmasi diterima. Menjalankan rencana: {self.pending_plan['plan']}")
+            self.chat_log.write_system(f"Konfirmasi diterima. Menjalankan rencana...")
             self.run_worker(self.execute_worker(self.pending_plan), exclusive=True)
         else:
             self.chat_log.write_asterix("Dibatalkan. Tidak ada tindakan yang diambil.")
@@ -86,21 +87,29 @@ class AsterixApp(App):
         plan = core.analyze(user_input)
         session.append_history("assistant", json.dumps(plan))
 
+        plan_text = plan.get("plan", "Tidak ada rencana.")
+        command_to_run = plan.get("command")
+
+        self.chat_log.write_plan(plan_text, command_to_run)
+
         if plan.get("requires_confirmation"):
             self.pending_plan = plan
             self.waiting_for_confirmation = True
-            self.chat_log.write_asterix(f"Rencana saya adalah: **{plan['plan']}**")
-            self.chat_log.write_asterix(f"Perintah yang akan dijalankan: `[bold yellow]{plan['command']}[/]`")
-            self.chat_log.write_system("Apakah kamu setuju? (y/n)")
+            self.chat_log.write_system("Apakah kamu setuju untuk menjalankan perintah di atas? (y/n)")
             self.input_field.disabled = False
             self.input_field.focus()
         else:
-            self.chat_log.write_asterix(plan.get("plan", "Baik, saya proses."))
-            await self.execute_worker(plan)
+            if command_to_run:
+                 await self.execute_worker(plan)
+            else:
+                self.input_field.disabled = False
+                self.input_field.focus()
 
     async def execute_worker(self, plan: dict) -> None:
-        result = core.execute_plan(plan)
-        self.chat_log.write_asterix(result)
+        result = escape(core.execute_plan(plan))
+        # Panggil method khusus untuk hasil eksekusi
+        self.chat_log.write_execution_result(result)
+
         self.pending_plan = None
         self.input_field.disabled = False
         self.input_field.focus()
