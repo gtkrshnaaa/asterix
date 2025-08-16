@@ -4,7 +4,7 @@ class ChatLog(Log):
     """Widget log khusus untuk menampilkan percakapan."""
 
     def __init__(self, **kwargs):
-        super().__init__(highlight=True, markup=True, **kwargs)
+        super().__init__(highlight=True, **kwargs)
 
     def write_user(self, message: str) -> None:
         """Menampilkan pesan dari pengguna."""

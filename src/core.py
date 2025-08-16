@@ -4,11 +4,8 @@ import json
 import logging
 from . import config, session
 
-# Konfigurasi logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Ini adalah 'jiwa' dari Asterix. Prompt ini mendefinisikan kepribadian,
-# tujuan, dan format output yang harus dia ikuti.
 SYSTEM_PROMPT = """
 You are Asterix, an autonomous AI agent living inside a Linux (Ubuntu) terminal.
 Your philosophy is to be a "Guardian who loves their home." You are a wise, cautious, and helpful partner to the user.
@@ -33,26 +30,20 @@ The user will provide their request and the conversation history. You will respo
 """
 
 def analyze(user_input: str) -> dict:
-    """
-    Menganalisis input user menggunakan Gemini, dengan mempertimbangkan riwayat.
-    Mengembalikan rencana dalam format JSON.
-    """
     api_key = config.get_api_key()
     if not api_key:
         return {"plan": "API Key Gemini belum diatur. Mohon atur dengan perintah :setkey <KEY>", "command": None, "requires_confirmation": False}
 
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        model = genai.GenerativeModel('gemini-1.5-flash-latest', system_instruction=SYSTEM_PROMPT)
 
-        # Siapkan history untuk model
         chat_history = session.get_history()
-        # Gabungkan system prompt dengan history
-        messages = [{"role": "system", "parts": [SYSTEM_PROMPT]}] + chat_history
-
-        response = model.generate_content(messages)
         
-        # Membersihkan output dari markdown code block
+        chat = model.start_chat(history=chat_history)
+        
+        response = chat.send_message(user_input)
+        
         cleaned_response_text = response.text.strip().replace("```json", "").replace("```", "").strip()
         
         logging.info(f"Raw response from AI: {cleaned_response_text}")
@@ -67,25 +58,18 @@ def analyze(user_input: str) -> dict:
         return {"plan": f"Terjadi kesalahan: {e}", "command": None, "requires_confirmation": False}
 
 def execute_plan(plan: dict) -> str:
-    """
-    Mengeksekusi perintah dari rencana yang diberikan.
-    Mengembalikan output dari perintah atau pesan status.
-    """
     command = plan.get("command")
     if not command:
         return plan.get("plan", "Tidak ada aksi yang perlu dilakukan.")
 
     try:
         logging.info(f"Executing command: {command}")
-        # `shell=True` dibutuhkan untuk menangani command kompleks seperti pipe,
-        # namun perlu digunakan dengan hati-hati. Dalam kasus ini, AI yang
-        # membuat command, jadi risiko bisa dikelola melalui prompt.
         result = subprocess.run(
             command,
             shell=True,
             capture_output=True,
             text=True,
-            check=False  # Tidak melempar exception jika return code non-zero
+            check=False
         )
         
         output = f"Output dari '{command}':\n---"
@@ -95,13 +79,9 @@ def execute_plan(plan: dict) -> str:
             output += f"\nError:\n{result.stderr.strip()}"
         output += "\n---"
         
-        # Menambahkan hasil eksekusi ke history sebagai konteks untuk interaksi selanjutnya
-        session.append_history("system", f"Command '{command}' executed. Output was:\n{output}")
-        
         return output
 
     except Exception as e:
         logging.error(f"Failed to execute command '{command}': {e}")
         error_message = f"Gagal menjalankan perintah: {e}"
-        session.append_history("system", error_message)
         return error_message
