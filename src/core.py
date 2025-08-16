@@ -32,7 +32,7 @@ The user will provide their request and the conversation history. You will respo
 def analyze(user_input: str) -> dict:
     api_key = config.get_api_key()
     if not api_key:
-        return {"plan": "API Key Gemini belum diatur. Mohon atur dengan perintah :setkey <KEY>", "command": None, "requires_confirmation": False}
+        return {"plan": "Gemini API Key is not set. Please set it with the :setkey <KEY> command.", "command": None, "requires_confirmation": False}
 
     try:
         genai.configure(api_key=api_key)
@@ -52,15 +52,30 @@ def analyze(user_input: str) -> dict:
 
     except json.JSONDecodeError as e:
         logging.error(f"JSON Decode Error: {e}. Response: {cleaned_response_text}")
-        return {"plan": f"Terjadi kesalahan saat memproses respons dari AI. Coba lagi.\nDetail: {e}", "command": None, "requires_confirmation": False}
+        return {"plan": f"An error occurred while processing the AI's response. Please try again.\nDetails: {e}", "command": None, "requires_confirmation": False}
     except Exception as e:
         logging.error(f"An error occurred in analyze: {e}")
-        return {"plan": f"Terjadi kesalahan: {e}", "command": None, "requires_confirmation": False}
+        return {"plan": f"An error occurred: {e}", "command": None, "requires_confirmation": False}
 
 def execute_plan(plan: dict) -> str:
     command = plan.get("command")
     if not command:
-        return plan.get("plan", "Tidak ada aksi yang perlu dilakukan.")
+        return plan.get("plan", "No action to perform.")
+
+    if command.strip().startswith("sudo"):
+        try:
+            subprocess.run(["sudo", "-n", "true"], check=True, capture_output=True)
+            logging.info("Sudo credentials are cached. Proceeding with command.")
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            logging.warning("Sudo credentials not cached. Instructing user.")
+            return (
+                "This command requires `sudo` privileges, but your credentials are not cached.\n\n"
+                "**Action Required:**\n"
+                "1. Open a new terminal (outside this application).\n"
+                "2. Run a simple command like `sudo ls` and enter your password there.\n"
+                "3. Return here and try your command again.\n\n"
+                "This is a security measure to ensure your password is never handled by this application."
+            )
 
     try:
         logging.info(f"Executing command: {command}")
@@ -72,7 +87,7 @@ def execute_plan(plan: dict) -> str:
             check=False
         )
         
-        output = f"Output dari '{command}':\n---"
+        output = f"Output from '{command}':\n---"
         if result.stdout:
             output += f"\n{result.stdout.strip()}"
         if result.stderr:
@@ -83,5 +98,5 @@ def execute_plan(plan: dict) -> str:
 
     except Exception as e:
         logging.error(f"Failed to execute command '{command}': {e}")
-        error_message = f"Gagal menjalankan perintah: {e}"
+        error_message = f"Failed to execute command: {e}"
         return error_message
