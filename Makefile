@@ -13,6 +13,7 @@ export-all:
 	@rm -f z_project_list/listing.txt
 	@for f in $$(find . -type f \
 		-not -path '*/\.*' \
+		-not -path '*/__pycache__/*' \
 		-not -name ".gitkeep" \
 		| sort); do \
 			echo "=== $$f ===" >> z_project_list/listing.txt; \
