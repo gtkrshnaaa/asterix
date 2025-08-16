@@ -1,4 +1,4 @@
-.PHONY: run export-all install
+.PHONY: run export-all install venv-activate
 
 install:
 	python3 -m venv .venv
