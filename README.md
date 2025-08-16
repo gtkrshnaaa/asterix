@@ -44,10 +44,11 @@ Asterix bekerja dalam sebuah `loop` yang memastikan setiap tindakan terencana da
 
 ### **4. Tech Stack**
 
-[](https://www.python.org/)
-[](https://ai.google.dev/)
-[](https://textual.textualize.io/)
-[](https://www.linux.org/)
+[![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Google AI](https://img.shields.io/badge/Google%20AI-4285F4?logo=google&logoColor=white)](https://ai.google.dev/)
+[![Textual](https://img.shields.io/badge/Textual-0F1419?logo=textualize&logoColor=white)](https://textual.textualize.io/)
+[![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black)](https://www.linux.org/)
+
 
   * **Bahasa**: Python 3.9+
   * **Inti AI**: Google Gemini API (menggunakan model `gemini-2.5-flash`)
