@@ -21,8 +21,8 @@ Filosofi inti dari Asterix adalah menjadi **"Penjaga rumah yang menyayangi rumah
 
 ### **3. Tujuan**
 
-* **Menyediakan Antarmuka Percakapan**: Memungkinkan pengguna mengelola sistem Linux dengan bahasa sehari-hari, bukan dengan perintah terminal yang kaku.
-* **Menjadi Penjaga Sistem**: Bertindak sebagai lapisan pelindung yang mencegah kesalahan manusia yang bisa merusak sistem.
+* **Menjembatani Perintah Rumit dengan Bahasa Alami**: Memungkinkan pengguna mengelola sistem Linux dengan bahasa sehari-hari, bukan dengan perintah terminal yang kaku.
+* **Menjadi Asisten yang Mengutamakan Kebaikan untuk Sistem**: Bertindak sebagai lapisan pelindung yang mencegah kesalahan manusia yang bisa merusak sistem.
 * **Meningkatkan Efisiensi**: Menghemat waktu pengguna dengan mengotomasi tugas-tugas administrasi, DevOps, dan pengembangan.
 * **Menciptakan Pengalaman Interaktif**: Mengubah pengalaman menggunakan terminal menjadi lebih rapi dan intuitif dengan visualisasi data dan alur yang jelas.
 
